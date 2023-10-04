@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+<div>
+  <div class="container pt-4">
+    <div class="row  mt-4 mx-auto justify-content-between">
+      <div class="col-lg-4 shadow p-0">
+        <div class="alert alert-info">
+          <h2>Add New TODO</h2>
+        </div>
+        <div class="p-4">
+          <form action="/add-todo/" method="POST">
+            {% csrf_token %}
+            {{form.as_p}}
+            <hr>
+            <input class="btn btn-info" type="submit" value="Add">
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6 shadow p-0">
+        <div>
+        {% if todos|length == 0 %}
+        <div class="alert alert-info text-center">
+          <p class="display-4" style="font-size: 30px; ">No Todos</p>
+        </div>
+        {% else %}
+        <div>
+          <table class="table table-dark">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+               {% for todo in todos %}
+               <tr>
+                 <td>{{forloop.counter}}</td>
+                 <td>{{todo.title}}</td>
+                 <td>
+                  {% if todo.status == 'C' %}
+                      ✅
+                   {% else %}
+                      🕞
+                   {% endif %}
+                 </td>
+                 <td>{{todo.priority}}</td>
+                 <td class="text-center">
+                   <a href="/delete-todo/{{todo.id}}" title="Delete" class="btn btn-sm">🗑️</a>
+                  {% if todo.status == 'P' %}
+                      <a href="/change-status/{{todo.id}}/C" title="Mark Completed" class="btn">✅</a>
+                   {% else %}
+                      <a href="/change-status/{{todo.id}}/P" title="Mark Pending" class="btn">🕞</a>
+                   {% endif %}
+                  </td>
+               </tr>
+               {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- verification_modal.html -->
+    <div class="modal fade" id="verificationModal" tabindex="-1" role="dialog" aria-labelledby="verificationModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="verificationModalLabel">Email Verification</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>        
+              </div>
+              <div class="modal-body">
+                  <p>Please check your email to verify your account.</p>
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+ </div>
+{% endblock %}
+
+
+{% block script %}
+<!-- registration.html -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Check if the user is not verified
+        var userIsNotVerified = {% if not user.is_staff %}true{% else %}false{% endif %};
+
+        // Function to show the verification modal
+        function showVerificationModal() {
+            if (userIsNotVerified) {
+                $('#verificationModal').modal('show');
+            }
+        }
+
+        // Intercept all clicks on the page
+        $(document).on('click', function(e) {
+            // Check if the user is not verified and prevent actions
+            if (userIsNotVerified) {
+                e.preventDefault(); // Prevent the default action (e.g., link click)
+                showVerificationModal();
+            }
+        });
+
+        // Intercept other actions (e.g., form submissions) as needed
+        $('form').on('submit', function(e) {
+            if (userIsNotVerified) {
+                e.preventDefault(); // Prevent form submission
+                showVerificationModal();
+            }
+        });
+
+        // Show the modal when the page initially loads
+        showVerificationModal();
+    });
+</script>
+{% endblock  %}
